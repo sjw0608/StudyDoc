@@ -200,6 +200,104 @@ for(var i =0;i<tabList.length;i++){
 
 ## 面向对象编程（OOP）
 
+### 原型链设计模式（`prototype`&`__ptoto__`）
+
+> 【函数】
+>
+> 普通函数、类（所有的类：内置类、自己创建的类）
+>
+> 【对象】
+>
+> 普通对象、数组、正则、Math、实例是对象类型的（除了基本类型的字面量创建的值）prototype的值也是对象类型的、函数也是对象类型的
+>
+> 。。。
+>
+> 1- 所有的函数数据类型都天生自带一个属性：`prototype`（原型），这个属性的值是一个对象，浏览器会默认给他开辟一个堆内存
+>
+> 2- 在浏览器给prototype开辟的堆内存中有一个天生自带的属性：`constructor`，这个属性存储的值是当前函数本身
+>
+> 3- 每一个对象都有一个`__proto__`的属性，这个属性指向当前实例所属类`prototype`（如果不能确定它是谁的实例，都是Object的实例）
+
+:red_circle: 原型`prototype`的作用：存储一些公共的属性和方法，供它的实例调取使用
+
+:red_circle: 基类Object的原型上的`__proto__`指向null，因为到最底层类，如果要指向也是指向自己本身
+
+#### 原型链
+
+> 它是一种基于`__proto__`向上查找的机制，当我们操作实例的某个属性或者方法的时候，首先找自己空间中私有的属性或者方法
+>
+> 1. 找到了，则结束查找，使用自己私有的即可
+> 2. 没有找到，则基于`__proto__`找所属类的prototype，若果找到就用这个公有的，如果没找到，基于原型上的`__proto__` 继续向上查找，一直找到Objcet.prototype的原型为止，如果再没有，操作的属性或者方法不存在
+
+> 1. 只要你是个函数（不管是啥类），永远都是内置Function这个类的一个实例
+
+```js
+function Fn(){
+  var n = 10
+  this.AA = function(){
+    console.log('aa[1]')
+  }
+  this.BB = function(){
+     console.log('bb[1]')
+  }
+}
+Fn.prototype.AA = function(){console.log('AA[1]')}
+var f1 = new Fn()
+var f2 = new Fn
+console.log(f1.n) // undefined
+f1.AA() // aa[1] 
+```
+
+
+
+### 构造函数设计模式 Constructor
+
+> 基于构造函数创建自定义类(constructor)
+>
+> 1. 在普通函数执行的基础上“new xxx()”,这样就不是普通函数执行了，而是构造函数执行，当前的函数名称之为“类名”，接收的返回结果是当前类的一个实例
+> 2. 自己创建的类名最好第一个单词首字母大写
+> 3. 这种构造函数设计模式执行，主要用于组件、类库、插件、框架等的封装，平时写业务逻辑一般不这样处理
+
+```js
+function Fn(name,age){
+  var n = 10
+  this.name = name
+  this.age = age + n
+}
+// 普通函数执行
+// 1. 形成一个私有作用域
+// 2. 形参赋值
+// 3. 变量提升 
+// 4. 代码执行
+// 5. 栈内存释放问题
+fn()
+var f = new Fn('xxx',20)
+// 构造函数执行
+// 1. 像普通函数执行一样，形成一个私有作用域（栈内存）
+// 2. 【构造函数执行独有】在JS代码自上而下执行之前，首先在当前形成的私有战中创建一个对象（创建一个堆内存：暂不存储任何的东西），并且让函数中的执行主体（THIS）指向这个新的堆内存（THIS === 创建的对象）
+// 3. 代码自上而下执行 
+// 4. 【构造函数执行独有】代码执行完成，把之前创建的堆内存地址返回（浏览器默认返回）
+
+// 也就是开始创建的对象其实就是当前Fn这个类的一个实例，我们让this指向这个实例，代码执行中的this.xxx =xxx 都是给实例设置”私有属性“，最后浏览器会把默认创建的实例返回，供外面接收。再次执行new Fn()就是把上面的操作克隆一份，会形成新的实例（新的内存空间），所以说实例是对立分开的
+```
+
+> JS中创建值有两种方式
+>
+> - 字面量表达式
+> - 构造函数模式
+
+```js
+var obj = {} // 字面量方式
+var obj2 = new Object() // 构造函数模式
+// 不管是哪一种方式创造出来的都是Object类的实例，而实例之间是独立分开的，所以 var xxx = {} 这种模式就是JS中的单例模式
+// 基本数据类型基于两种不同的模式创建出来的值是不一样的
+// 基于字面量方式创建出来的值是基本类型值
+// 基于构造函数创建出来的是引用类型
+// num2是数字类的实例，num1也是数字类的实例，它只是JS表达数字的方式之一，都可以使用数字类提供的属性和方法
+let num1 = 12 // typeof num1 == 'number'
+let num2 = new Number(12) // typeof num2 == 'object'
+```
+
 ### 单例模式（Singleton Patter）
 
 ```js
@@ -271,7 +369,7 @@ console.log(n,obj.n) // 8 6
 > 1. 把实现相同功能的代码进行“封装”，以此来实现”批量生产“想要实现这个功能，我们只需要执行函数即可
 > 2. ”低耦合高内聚“：减少页面中的冗余代码，提高代码的重复使用率
 
-## 函数
+### 函数
 
 函数有三种角色(三种角色间没有什么必然关系)：
 
@@ -285,4 +383,83 @@ console.log(n,obj.n) // 8 6
   - 实例
 - 3.普通对象
   - 和普通的一个OBJ没什么区别，就是对键值对的增删改查
+
+```js
+// 阿里面试题
+function Foo(){
+  getName = function(){console.log(1)}
+  return this
+}
+Foo.getName = function(){console.log(2)}
+Foo.prototype.getName = function(){ console.log(3) }
+var getName = function(){ console.log(4) }
+function getName(){ console.log(5) }
+Foo.getName() // 2
+getName() // 4
+Foo().getName() // 1
+new Foo.getName() // 2
+new Foo().getName() // 3
+new new Foo().getName() // 3
+```
+
+### call 、apply、bind
+
+> 用来改变某一个函数中THIS关键字指向的
+
+#### call
+
+> - [fn].call([this],[param]...)
+>   - fn.call; 当前实例（函数FN）通过原型链的查找机制，找到Function.prototype上的call方法=》function call() {[native code]}
+>   - fn.call()：把找到的call方法执行
+>   - 当call方法执行的时候，内部处理了一些事情
+>     - 首先把要操作的函数中的THIS关键字变为CALL方法第一个传递的实参值
+>     - 把CALL方法中第二个及第二个以后的实参获取到
+>     - 把要操作的函数执行，并且把第二个以后的传递进来的实参传递给函数
+> - call中的细节
+>   - 非严格模式下，如果参数不传，或者第一个传递的实null/undefined，THIS都指向WINDOW
+>   - 在严格模式下，第一个参数是谁，THIS就指向谁（包括null/undefined），不传THIS是undefined
+
+```js
+Function.prototype.mycall = function (){
+  let param1 = arguments[0] || window,
+      paramOther = [...arguments].slice(1) // 把arg中除了第一个以外的实参获取到
+  // =》 this:fn 当前要操作的函数（函数类的一个实例）
+  // 把FN中的this关键字修改为 `param1` => 把THIS（call中）中的this关键字修改为param1
+   param1.fn = this
+  // => 把fn执行，把paramOther分别传递给fn
+  var result = param1.fn(...paramOther)
+  delete param1.fn
+  return result
+}
+```
+
+#### apply
+
+> apply和call基本上一摸一样，唯一区别在于传参方式
+>
+> Fn.apply(obj,[10,20]) APPLY 把需要传递给FN的参数放到一个数组（或者类数组）中传递进去，虽然写的是一个数组，但是也相当于给FN一个个的传递
+
+```js
+Function.prototype.myapply = function(){
+  let param1 = arguments[0] || window,
+      paramOther = arguments[1]
+  param1.fn = this
+  var result
+  if(paramOther){
+    result = param1.fn(...paramOther)
+  }else{
+    result = param1.fn()
+  }
+  delete param1.fn
+  return result
+}
+```
+
+#### bind
+
+>语法和call一摸一样，唯一的区别在于立即执行还是等待执行
+>
+>fn.call(obj,10,20) 改变FN中的THIS，并且把FN立即执行
+>
+>fn.bind(obj,10,20) 改变FN中的THIS，此时的FN并没有执行（不兼容IE6～8）
 
