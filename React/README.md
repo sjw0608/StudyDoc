@@ -409,3 +409,303 @@ this.forceUpdate()
 
 ## 生命周期
 
+```react
+import React, { Component } from 'react';
+export default class App extends Component{
+   constructor() {
+        super()
+        this.state = {
+        }
+    }
+    componentWillMount(){}
+  	render(){return (
+      <div ref={(list)=>{this.list=list}}>
+      	<div ref='son'></div>
+      </div>
+    )}
+  	componentWillReceiveProps(newProps){}
+  	shouldComponentUpdate(newProps,newState){}
+  	componentWillUpdate(newProps,newState){}
+  	componentDidUpdate(newProps,newState){}
+  	componentDidMount(){
+      console.log(this.list)
+      console.log(this.refs.son)
+    }
+  	componentWillUnmount(){}
+}
+```
+
+- `constructor`：初始化
+  - 当前生命周期函数可以用来定义当前组件所需要的一些状态
+  - 当前生命周期里面必须要写`super` 如果不写会报错或者`this`的指向可能发生改变
+  - 如果在 `super` 和 `constructor` 中没有传递 `props` 这个参数的话是访问不到`this.props`属性的
+- `componentWillMount`：组件挂载前
+  - 在当前生命周期函数里面可以访问到`props`属性，在这里可以接收到外部属性，同时可以将外部属性转换为内部属性
+  - 在当前生命周期函数里面不需要调用`this.setState`去修改`state`中的值，因为当前函数执行完毕以后就会执行`render`函数
+- `render`：
+  - `render` 函数什么时候会执行？
+    - 当`this.state`或者`this.props`发生改变的时候`render`函数就会执行
+    - `this.state`或者`this.props`发生改变会执行哪些生命周期函数？
+      - `this.state`：`shouldComponentUpdate --> componentWillUpdate --> render --> componentDidUpdate`
+      - `this.props`：`componentWillReceiveProps --> shouldComponentUpdate --> componentWillUpdate --> render --> componentDidUpdate`
+  -  `render`函数执行的时候会将虚拟DOM和数据进行相结合，在缓存中缓存一份虚拟DOM，当数据发生改变的时候会将虚拟DOM与缓存中的虚拟DOM进行比较（diff算法）。比较完毕以后，将需要修改的虚拟DOM进行批量修改，而不是全部修改。减少不必要的更新
+- `componentWillReceiveProps`
+  - 外部属性发生改变的时候就会执行当前生命周期函数，当前生命周期函数会有一个参数是新的Props
+- `shouldComponentUpdate`
+  -  当`this.state` 或者` this.props` 发生改变的时候 就会执行`render`函数，
+  - `shouldComponentUpdate` 这个生命周期函数必须要返回一个布尔值，如果返回true则下面的生命周期函数继续执行，如果返回false下面的生命周期函数不再执行
+  - `shouldComponentUpdate` 这个生命周期函数主要是用来判断DOM是否更新，而不是数据是否更新（不管返回值是true或者false，`this.state`中的数据肯定会改变，但是如果返回值是false的时候DOM是不会进行更新的）
+  - 这个生命周期函数里面可以做一些相关的操作来减少虚拟DOM不必要的更新（利用`shouldComponentUpdate`中接受到的两个参数，一个是新的`props`，一个是新的`state `来进行比较）
+- `componentWillUpdate`：更新前
+  - 虚拟DOM与数据进行相结合，但是没有生成真正的DOM结构
+- `componentDidUpdate`：更新后
+  - 数据和模版进行相结合生成了真正的DOM结构，在这里可以获取到数据更新后最新的DOM结构
+- `componentDidMount`
+  - `render`函数执行完毕以后 `componentDidMount` 就会去执行，在这个生命周期函数里面我们可以进行 `fetch`的请求以及获取到真实的DOM结构
+- `componentWillUnmount`：组件销毁
+
+### 当组件第一次渲染的时候会执行哪些生命周期函数？
+
+`constructor --> componentWillMount --> render --> componentDidMount`
+
+### 操作DOM的两种方式
+
+```react
+1、 this.refs.xxx
+2、 ref = {(tagName)=>{this.key = tagName}} 访问直接 this.key即可
+```
+
+### react生命周期函数中有哪些生命周期函数只会执行一次？
+
+- `constructor`
+- `componentWillMount`
+- `componentDidMount`
+- `componentWillUnmount`
+
+### react生命周期函数中有哪些生命周期函数会执行多次？
+
+- `componentWillReceiveProps`
+- `shouldComponentUpdate`
+- `componentWillUpdate`
+- `render`
+- `componentDidUpdate`
+
+## React路由
+
+- 安装
+
+```shell
+yarn add react-router-dom --dev
+```
+
+- 使用
+
+```react
+import React, { Component, Fragment } from 'react';
+import { HashRouter, BrowserRouter, Route, Link, NavLink, Switch, Redirect } from 'react-router-dom';
+import Home from './components/home';
+import Order from './components/order';
+import My from './components/my';
+import List from './components/list';
+import HomeProduct from './components/home'
+/**
+所有的路由配置需要在当前组件内部
+BrowserRouter：路由的一种形式 不带hash的路由
+HashRouter：Hash路由同Vue中的 hash路由
+*/
+export default class App extends Component {
+  constructor(porps) {
+    super(porps)
+  }
+  render() {
+    return (
+      <HashRouter>
+        <Fragment>
+          <Route path="/home" exact component={Home}></Route>
+          <Route path="/order" exact component={Order}></Route>
+          <Route path="/my" exact component={My}></Route>
+          <Route path="/list" exact component={List}></Route>
+          <Redirect path="/" to='/home'></Redirect>
+          <Route path="/home/product" exact component={HomeProduct}></Route>
+          {/* <Route path="/home" render={({history,match,location})=>{
+            return <Home history={history} match={match}></Home>
+          }}></Route> */}
+          {/* <Route path="/home" exact render={() => {
+            return (
+              <Home>
+                <Route path="/order" exact component={Order}></Route>
+                <Route path="/my" exact component={My}></Route>
+                <Route path="/list" exact component={List}></Route>
+              </Home>
+            )
+          }}></Route> */}
+
+          {/* <Link to='/home'>首页</Link>
+          <Link to='/list'>列表</Link>
+          <Link to='/my'>我的</Link>
+          <Link to='/order'>订单</Link> */}
+          <NavLink to='/home'>首页</NavLink>
+          <NavLink to='/list'>列表</NavLink>
+          <NavLink to='/my'>我的</NavLink>
+          <NavLink to='/order'>订单</NavLink>
+        </Fragment>
+      </HashRouter>
+    )
+  }
+}
+```
+
+- `Route`：渲染相对应的组件，当`path` 匹配成功的时候会渲染`component`或者`render`中的组件
+
+  - `path`：匹配的路径
+  - `component`：渲染的方式
+  - `render`：渲染的方式
+
+- `Link`：路由跳转的方式
+
+  - `to`：决定跳转到那个路由路径
+
+- `NavLink`：路由跳转的方式，被选中的时候会加一个类名（默认为`active`） 
+
+  - `activeClassName`：更改路由选中后的类名
+  - `activeStyle`：可以设置选中过后的样式
+
+- `Switch`：只会匹配一个路由的路径
+
+- `exact`：要求路径完全匹配成功 `to` 和 `path` 的值必须完全匹配
+
+- `Redirect`：路由重定向
+
+  - `path`：路径
+  - `to`：重定向到的地址
+
+- 编程式导航方式
+
+  - `this.props.history.push()` 跳转
+  - `this.props.history.goBack()` 后退
+  - `this.props.history.goForward()` 前进
+  - `this.props.history.replace()` 替换会清除掉路由跳转的历史记录
+
+- 路由的传参
+
+  - 1、`path`路径传值（`params`）
+
+    ```react
+    // 路由配置
+    <Route path="/order/:id/:name" exact component={Order}></Route>
+    // 取值
+    this.state.id = this.props.match.params.id
+    this.state.name = this.props.match.params.name
+    ```
+
+  - 2、`query`传值
+
+    ```react
+    // 路由配置
+    // /order?id=xxx&name=xxx
+    // 取值
+    const qs = require('querystring')
+    let data = qs.parse(this.props.location.search.slice(1))
+    this.state.id = data.id
+    this.state.name = data.name
+    ```
+
+  - 3、编程式导航传值
+
+    ```react
+    // 跳转
+    this.props.history.push({
+      pathname:'/order',
+      query:{
+        id:1,
+        name:'xxx'
+      }
+    })
+    ```
+
+### `Route`中`component`和`render`渲染方式的区别
+
+- `component` 渲染的时候值是一个组件名称；`render`渲染的时候值是一个函数，返回一个组件或者标签
+- `render`渲染的时候可以进行组件传值，`component`渲染的时候不能进行组件的传值
+- `component`渲染组件的时候可以直接通过 `this.props` 拿到 `history`、 ` match`、 ` location`；
+
+`render`渲染的时候需要手动的在函数中解构需要用到的参数，通过组件传值的方式进行传递
+
+## React-redux
+
+```react
+// 1、安装
+yarn add redux react-redux --dev
+
+// 2、引入
+import {Provider} from 'react-redux';
+import store from './store';
+
+// 3、用 `Provider` 将路由包裹起来
+<Provider store={stire}></Provider>
+
+// 4、组件内部使用
+import {connect} from 'react-redux';
+
+// state 映射到当前的组件 this.props 取值
+const mapStateToProps = (state) => ({
+    number :state.n
+})
+// 事件派发
+const mapDispatchToProps = (dispatch)=>({
+    // 事件相关的操作
+    handle(){
+        let action = { type:xxx}
+        dispatch(action)
+    }
+})
+export default connect(mapStateToProps,mapDispatchToProps)(App)
+
+/**
+ * connect是用来链接当前组件与store
+ * 第一个括号里面有两个参数
+ * 第一个参数是：`mapStateToProps`
+ * 第二个参数是：`mapDispatchToProps`
+ * 第二个括号里面有一个参数
+ * 参数是当前组件的名称
+ */
+```
+
+## fetch
+
+```js
+
+/**
+ * 
+ * fetch
+ * 安装
+ * yarn add whatwg-fetch --dev
+ * 
+ * 基本用法
+ * fetch(url)
+ * .then((res)=>res.json())
+ * .then((data)=>{console.log(data)})
+ * 
+ * 默认是get请求,如果需要向后端发送数据则直接在地址后面作拼接即可
+ * 
+ * post 
+ * 
+ * let obj = {username:'123',pwd:'456'}
+ * fetch(url,{
+ *  method:'post',
+ *  body: JSOn.stringify(obj),
+ *  header:{
+ *    // 必须要写
+ *    "Content-Type":"application/json;"
+ *  }
+ * })
+ * .then((res)=>res.json()) // 未处理的结果集
+ * .then((data)=>{console.log(data)})
+ * 
+ * 携带cookie 进行提交
+ * {
+ *  credentials:'include'
+ * }
+ */
+```
+
