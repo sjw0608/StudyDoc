@@ -709,3 +709,29 @@ export default connect(mapStateToProps,mapDispatchToProps)(App)
  */
 ```
 
+## Hooks
+
+### `useState`：保存组件状态
+
+>通过传入useState参数后返回一个带有默认状态和改变状态函数的数组。通过传入新状态给函数来改变原来的状态值。
+>
+>useState 不帮助你处理状态，相较于 setState 非覆盖式更新状态，useState 覆盖式更新状态，需要开发者自己处理逻辑
+
+```jsx
+import React,{useState,useEffect} from 'react'
+
+export default function(){
+  let [count,setCount] = useState(0)
+  function updateCount (){
+    return setCount(count+1)
+  }
+  return (
+  	<div onClick={updateCount}>{count}</div>
+  )
+}
+```
+
+### `useEffect`：处理副作用
+
+> 传两个参数
+
