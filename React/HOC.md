@@ -291,13 +291,63 @@ export defaule ComHOC(Index)
 实现一个懒加载功能的HOC，可以实现组件的分片渲染，用于分片渲染页面，不至于一次渲染大量组件造成白屏问题。
 
 ```jsx
-const renderQueue = []let isFirstRender = falseconst tryRender = () => {  const render = renderQueue.shift()  if(!render) retuen  setTimeout(()=>{render()},300)}function RenderHOC(WrapComponent){  return function(props){    const [isRender, setRender] = useState(false)    useEffect(()=>{      renderQueue.push(()=>{ setRender(true) })      if(!isFirstRender){        tryRender()        isFirstRender = true      }    },[])    return isRender ? <WrapComponent tryRender={tryRender} {...props} /> : <Loading />  }}class Index extends React.Component{  componentDidMount(){    const { name, tryRender } = this.props    tryRender()    console.log(`${name}渲染`)  }  render(){    return <div><img src="xxx.jpg" /></div>  }}const Item = RenderHOC(Index);export default () => {  return <React.Fragament>  	<Item name="组件一" />    <Item name="组件二" />    <Item name="组件三" />  </React.Fragament>}
+const renderQueue = []
+let isFirstRender = falseconst 
+tryRender = () => {  
+  const render = renderQueue.shift()  
+  if(!render) retuen  
+  setTimeout(()=>{render()},300)}
+  function RenderHOC(WrapComponent){  
+    return function(props){    
+      const [isRender, setRender] = useState(false)    
+      useEffect(()=>{      
+        renderQueue.push(()=>{ setRender(true) })      
+        if(!isFirstRender){
+        tryRender()
+        isFirstRender = true
+        }
+      },[])
+   return isRender ? <WrapComponent tryRender={tryRender} {...props} /> : <Loading />  
+ }
+}
+class Index extends React.Component{
+  componentDidMount(){
+    const { name, tryRender } = this.props
+    tryRender()
+    console.log(`${name}渲染`)
+  }
+  render(){    
+    return <div><img src="xxx.jpg" /></div>  
+  }
+}
+const Item = RenderHOC(Index);
+export default () => {
+  return <React.Fragament>
+    <Item name="组件一" />
+    <Item name="组件二" />
+    <Item name="组件三" />
+  </React.Fragament>
+}
 ```
 
 ##### 进阶：异步组件（懒加载）
 
 ```jsx
-export default function AsyncRouter(loadRouter){  return class Content extends React.Component{    state = { Component: null }  	componentDidMount(){      if(this.state.Component) return      loadRouter()      	.then(module => module.default)      	.then(Component => this.setState({Component}))    }  	render(){      const { Component } = this.state      return Component ? <Component {...this.props} /> : null    }  }}const Index = AsyncRouter(()=> import('../pages/index')
+export default function AsyncRouter(loadRouter){
+  return class Content extends React.Component{
+    state = { Component: null }
+    componentDidMount(){
+      if(this.state.Component) return
+      loadRouter()
+        .then(module => module.default)
+        .then(Component => this.setState({Component}))
+    }  
+    render(){
+      const { Component } = this.state
+      return Component ? <Component {...this.props} /> : null    }  
+    }
+}
+const Index = AsyncRouter(()=> import('../pages/index')
 ```
 
 ##### 反向继承：函数劫持
@@ -305,7 +355,15 @@ export default function AsyncRouter(loadRouter){  return class Content extends R
 HOC反向继承模式，可以实现颗粒化的函数劫持，也就是可以控制基类组件的 render函数，还可以篡改props，或者是 children。
 
 ```jsx
-const HOC = (WrapComponent) => 	class Index extends WrapComponent{    render(){      if(this.props.visible){        render super.render()      }else{        return <div>暂无数据</div>      }    }  }
+const HOC = (WrapComponent) => 	class Index extends WrapComponent{
+  render(){
+    if(this.props.visible){
+      render super.render()
+    }else{ 
+      return <div>暂无数据</div>
+    }
+  }
+}
 ```
 
 ##### 反向继承：修改渲染树
@@ -329,7 +387,46 @@ function HOC(Component){  return function renderWrapComponent(props){    const {
 ##### 进阶：定制化渲染流
 
 ```jsx
-function HOC(rule){  return function (Component){   	return function renderWrapComponent(props) {      const dep = rule(props)    	const RenderElement = useMemo(()=><Component {...props} />, [ dep ])    	return RenderElement    }  }}class Index1 extends React.Component{  render(){    console.log(`当前组件Index1是否渲染${this.props}`)    return <div>hello HOC,my name is Index1</div>  }}class Index2 extends React.Component{  render(){    console.log(`当前组件Index2是否渲染${this.props}`)    return <div>hello HOC,my name is Index2</div>  }}const IndexHoc1 = HOC(props=>props['num'])(Index1)const IndexHoc1 = HOC(props=>props['num1'])(Index2)export defaule () => {  const [num, setNum] = useState(0)  const [num1, setNum1] = useState(0)  const [num2, setNum2] = useState(0)    return <div>  	<IndexHoc1 num={num} num1={num1} num2={num2}/>    <IndexHoc2 num={num} num1={num1} num2={num2}/>    <button onClick={()=>setNum(num+1)}>num++</button>    <button onClick={()=>setNum1(num1+1)}>num1++</button>    <button onClick={()=>setNum2(num2+1)}>num2++</button>  </div>}
+function HOC(rule){
+  return function (Component){
+   	return function renderWrapComponent(props) {
+      const dep = rule(props)
+    	const RenderElement = useMemo(()=><Component {...props} />, [ dep ])
+    	return RenderElement
+    }
+  }
+}
+
+class Index1 extends React.Component{
+  render(){
+    console.log(`当前组件Index1是否渲染${this.props}`)
+    return <div>hello HOC,my name is Index1</div>
+  }
+}
+
+class Index2 extends React.Component{
+  render(){
+    console.log(`当前组件Index2是否渲染${this.props}`)
+    return <div>hello HOC,my name is Index2</div>
+  }
+}
+
+const IndexHoc1 = HOC(props=>props['num'])(Index1)
+const IndexHoc1 = HOC(props=>props['num1'])(Index2)
+
+export defaule () => {
+  const [num, setNum] = useState(0)
+  const [num1, setNum1] = useState(0)
+  const [num2, setNum2] = useState(0)
+  
+  return <div>
+  	<IndexHoc1 num={num} num1={num1} num2={num2}/>
+    <IndexHoc2 num={num} num1={num1} num2={num2}/>
+    <button onClick={()=>setNum(num+1)}>num++</button>
+    <button onClick={()=>setNum1(num1+1)}>num1++</button>
+    <button onClick={()=>setNum2(num2+1)}>num2++</button>
+  </div>
+}
 ```
 
 #### 赋能组件
@@ -341,13 +438,63 @@ function HOC(rule){  return function (Component){   	return function renderWrapC
 - 属性代理
 
 ```jsx
-function HOC(Component){  const proDidMount = Component.prototype.componentDidMount  Component.prototype.componentDidMount = function (){    console.log('劫持生命周期: componentDidMount')    proDidMount.call(this)  }  return class wrapComponent extends React.Component{    render(){      return <Component {...this.props} />    }  }}class Index extends React.Component{  componentDidMount(){    console.log('----didMount----')  }  render(){    return <div>hello Hoc</div>  }}export default HOC(Index)/**	效果：	劫持生命周期: componentDidMount	----didMount----*/
+function HOC(Component){
+  const proDidMount = Component.prototype.componentDidMount
+  Component.prototype.componentDidMount = function (){
+    console.log('劫持生命周期: componentDidMount')
+    proDidMount.call(this)
+  }
+  return class wrapComponent extends React.Component{
+    render(){
+      return <Component {...this.props} />
+    }
+  }
+}
+
+class Index extends React.Component{
+  componentDidMount(){
+    console.log('----didMount----')
+  }
+  render(){
+    return <div>hello Hoc</div>
+  }
+}
+export default HOC(Index)
+
+/**
+	效果：
+	劫持生命周期: componentDidMount
+	----didMount----
+*/
 ```
 
 - 反向继承实现
 
 ```jsx
-function HOC(Component){  const didMount = Component.prototype.componentDidMount  return class wrapComponent extends Component{    componentDidMount(){      console.log('劫持生命周期: componentDidMount')      if(didMount){        didMount.apply(this)      }    }    render(){      return super.render()    }  }}class Index extends React.Component{  componentDidMount(){    console.log('----didMounted----')  }  render(){    return <div>hello Hoc</div>  }}export default HOC(Index)
+function HOC(Component){
+  const didMount = Component.prototype.componentDidMount
+  return class wrapComponent extends Component{
+    componentDidMount(){
+      console.log('劫持生命周期: componentDidMount')
+      if(didMount){
+        didMount.apply(this)
+      }
+    }
+    render(){
+      return super.render()
+    }
+  }
+}
+
+class Index extends React.Component{
+  componentDidMount(){
+    console.log('----didMounted----')
+  }
+  render(){
+    return <div>hello Hoc</div>
+  }
+}
+export default HOC(Index)
 ```
 
 ##### 事件监控
@@ -355,7 +502,33 @@ function HOC(Component){  const didMount = Component.prototype.componentDidMount
 HOC还可以对原有组件进行监控。比如：事件监控、错误监控、事件监控等
 
 ```jsx
-// 组件内的事件监听function ClickHOC(Component){  return function Wrap(props){    const dom = useRef(null)    useEffect(()=>{      const handleClick = () => console.log('出发点击事件')      dom.current.addEventListener('click', handleClick)      return ()=>dom.current.removeEventListener('click', handleClick)    },[])    return <div ref={dom}><Component {...props} /></div>  }}class Index extends React.Component{  render(){    return <div className="index">    	<p>hello HOC</p>      <button>组件内部点击</button>    </div>  }}const IndexHoc = ClickHOC(Index)export default () => (	<div className="box">  	<IndexHoc />    <button>组件外部点击</button>  </div>)
+// 组件内的事件监听
+function ClickHOC(Component){
+  return function Wrap(props){
+    const dom = useRef(null)
+    useEffect(()=>{
+      const handleClick = () => console.log('出发点击事件')
+      dom.current.addEventListener('click', handleClick)
+      return ()=>dom.current.removeEventListener('click', handleClick)
+    },[])
+    return <div ref={dom}><Component {...props} /></div>
+  }
+}
+class Index extends React.Component{
+  render(){
+    return <div className="index">
+    	<p>hello HOC</p>
+      <button>组件内部点击</button>
+    </div>
+  }
+}
+const IndexHoc = ClickHOC(Index)
+export default () => (
+	<div className="box">
+  	<IndexHoc />
+    <button>组件外部点击</button>
+  </div>
+)
 ```
 
 ##### ref助力操控组件实例
@@ -365,7 +538,31 @@ HOC还可以对原有组件进行监控。比如：事件监控、错误监控�
 :warning:class 生命的有状态组件才有实例，function 声明的无状态组件不存在实例
 
 ```jsx
-// 属性代理-添加额外的生命周期function HOC(Component){  return class WrapComponent extends React.Component{    constructor(props){      super(props)      this.node = null    }    UNSAFE_componendWillReceiveProps(nextprops){      if(nextprops.number !== this.props.number){        this.node.handleNumberChange &&  this.node.handleNumberChange.call(this.node)      }    }    render(){      return <Component {...this.props} ref={node=>this,node=node} />    }  }}class Index extends React.Component{  handleNumberChange(){}  render(){    return <div>hello HOC</div>  }}export default HOC(Index)
+// 属性代理-添加额外的生命周期
+function HOC(Component){
+  return class WrapComponent extends React.Component{
+    constructor(props){
+      super(props)
+      this.node = null
+    }
+    UNSAFE_componendWillReceiveProps(nextprops){
+      if(nextprops.number !== this.props.number){
+        this.node.handleNumberChange &&  this.node.handleNumberChange.call(this.node)
+      }
+    }
+    render(){
+      return <Component {...this.props} ref={node=>this,node=node} />
+    }
+  }
+}
+class Index extends React.Component{
+  handleNumberChange(){}
+  render(){
+    return <div>hello HOC</div>
+  }
+}
+
+export default HOC(Index)
 ```
 
 ## 总结
